@@ -1,14 +1,14 @@
 package com.neovisionaries.ws.client;
 
+import org.apache.http.conn.ssl.SSLSocketFactory;
+
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
 
 /**
  * @author Aleksander Melnichnikov
@@ -19,13 +19,11 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
     private final ProxySettings mProxySettings;
     private int mConnectionTimeout;
     private boolean mVerifyHostname = true;
-    private final List<String> serverNameList;
 
 
-    public MegafonWebSocketFactory(List<String> serverNameList) {
+    public MegafonWebSocketFactory() {
         mSocketFactorySettings = new SocketFactorySettings();
         mProxySettings = new ProxySettings(this);
-        this.serverNameList = serverNameList;
     }
 
 
@@ -47,7 +45,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
      * @param factory A socket factory.
      * @return {@code this} instance.
      */
-    public com.neovisionaries.ws.client.WebSocketFactory setSocketFactory(SocketFactory factory) {
+    public MegafonWebSocketFactory setSocketFactory(SocketFactory factory) {
         mSocketFactorySettings.setSocketFactory(factory);
 
         return this;
@@ -60,8 +58,8 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
      *
      * @return The SSL socket factory.
      */
-    public SSLSocketFactory getSSLSocketFactory() {
-        return mSocketFactorySettings.getSSLSocketFactory();
+    public javax.net.ssl.SSLSocketFactory getSSLSocketFactory() {
+        return null;
     }
 
 
@@ -72,8 +70,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
      * @param factory An SSL socket factory.
      * @return {@code this} instance.
      */
-    public com.neovisionaries.ws.client.WebSocketFactory setSSLSocketFactory(SSLSocketFactory factory) {
-        mSocketFactorySettings.setSSLSocketFactory(factory);
+    public MegafonWebSocketFactory setSSLSocketFactory(SSLSocketFactory factory) {
 
         return this;
     }
@@ -96,7 +93,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
      * @param context An SSL context.
      * @return {@code this} instance.
      */
-    public com.neovisionaries.ws.client.WebSocketFactory setSSLContext(SSLContext context) {
+    public MegafonWebSocketFactory setSSLContext(SSLContext context) {
         mSocketFactorySettings.setSSLContext(context);
 
         return this;
@@ -142,7 +139,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
      * @throws IllegalArgumentException The given timeout value is negative.
      * @since 1.10
      */
-    public com.neovisionaries.ws.client.WebSocketFactory setConnectionTimeout(int timeout) {
+    public MegafonWebSocketFactory setConnectionTimeout(int timeout) {
         if (timeout < 0) {
             throw new IllegalArgumentException("timeout value cannot be negative.");
         }
@@ -194,7 +191,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
      * @return {@code this} object.
      * @since 2.3
      */
-    public com.neovisionaries.ws.client.WebSocketFactory setVerifyHostname(boolean verifyHostname) {
+    public MegafonWebSocketFactory setVerifyHostname(boolean verifyHostname) {
         mVerifyHostname = verifyHostname;
 
         return this;
@@ -326,7 +323,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
      * set by {@link #setSSLSocketFactory(SSLSocketFactory)}, the
      * instance is used.
      * <li>
-     * Otherwise, the value returned from {@link SSLSocketFactory#getDefault()}
+     * Otherwise, the value returned from {@link SSLSocketFactory}
      * is used.
      * </ol>
      * <li>
@@ -375,7 +372,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
      * set by {@link #setSSLSocketFactory(SSLSocketFactory)}, the
      * instance is used.
      * <li>
-     * Otherwise, the value returned from {@link SSLSocketFactory#getDefault()}
+     * Otherwise, the value returned from {@link SSLSocketFactory}
      * is used.
      * </ol>
      * <li>
@@ -517,11 +514,11 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
 
         // SSLSocketFactory for SSL handshake with the WebSocket endpoint.
         SSLSocketFactory sslSocketFactory = secure ?
-                (SSLSocketFactory) mSocketFactorySettings.selectSocketFactory(secure) : null;
+                SSLSocketFactory.getSocketFactory() : null;
 
         // Create an instance that will execute the task to connect to the server later.
         return new MegafonSocketConnector(
-                socket, address, timeout, serverNameList, handshaker, sslSocketFactory, host, port)
+                socket, address, timeout, handshaker, sslSocketFactory, host, port)
                 .setVerifyHostname(mVerifyHostname);
     }
 
@@ -537,7 +534,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
         Address address = new Address(host, port);
 
         // Create an instance that will execute the task to connect to the server later.
-        return new MegafonSocketConnector(socket, address, timeout, serverNameList)
+        return new MegafonSocketConnector(socket, address, timeout)
                 .setVerifyHostname(mVerifyHostname);
     }
 

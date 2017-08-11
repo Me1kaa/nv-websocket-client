@@ -1,9 +1,11 @@
 package com.neovisionaries.ws.client;
 
-import javax.net.ssl.*;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,19 +17,19 @@ public class MegafonSocketConnector extends SocketConnector {
     private final int mConnectionTimeout;
     private final ProxyHandshaker mProxyHandshaker;
     private final SSLSocketFactory mSSLSocketFactory;
+
     private final String mHost;
     private final int mPort;
     private boolean mVerifyHostname;
-    private final List<String> serverNameList;
 
 
-    MegafonSocketConnector(Socket socket, Address address, int timeout, List<String> serverNameList) {
-        this(socket, address, timeout, serverNameList, null, null, null, 0);
+    MegafonSocketConnector(Socket socket, Address address, int timeout) {
+        this(socket, address, timeout, null, null, null, 0);
     }
 
 
     MegafonSocketConnector(
-            Socket socket, Address address, int timeout, List<String> serverNameList,
+            Socket socket, Address address, int timeout,
             ProxyHandshaker handshaker, SSLSocketFactory sslSocketFactory,
             String host, int port) {
         super(null, null, 0, null, null, null, 0);
@@ -38,7 +40,6 @@ public class MegafonSocketConnector extends SocketConnector {
         mSSLSocketFactory = sslSocketFactory;
         mHost = host;
         mPort = port;
-        this.serverNameList = serverNameList;
     }
 
 
@@ -77,22 +78,6 @@ public class MegafonSocketConnector extends SocketConnector {
         return this;
     }
 
-    private SSLParameters getSSLServerNamesParam() {
-        SSLParameters parameters = new SSLParameters();
-        List<SNIMatcher> matchers = new ArrayList<SNIMatcher>();
-        for (final String serverName : serverNameList) {
-            matchers.add(new SNIMatcher(1) {
-                @Override
-                public boolean matches(SNIServerName sniServerName) {
-                    return serverName.equals(sniServerName.toString());
-                }
-            });
-
-        }
-        parameters.setSNIMatchers(matchers);
-        return parameters;
-    }
-
     private void doConnect() throws WebSocketException {
         // True if a proxy server is set.
         boolean proxied = mProxyHandshaker != null;
@@ -104,7 +89,6 @@ public class MegafonSocketConnector extends SocketConnector {
             if (mSocket instanceof SSLSocket) {
                 // Verify that the hostname matches the certificate here since
                 // this is not automatically done by the SSLSocket.
-                ((SSLSocket) mSocket).setSSLParameters(getSSLServerNamesParam());
                 verifyHostname((SSLSocket) mSocket, mAddress.getHostname());
             }
         } catch (IOException e) {
