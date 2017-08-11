@@ -537,7 +537,7 @@ public class MegafonWebSocketFactory extends WebSocketFactory {
         Address address = new Address(host, port);
 
         // Create an instance that will execute the task to connect to the server later.
-        return new SocketConnector(socket, address, timeout)
+        return new MegafonSocketConnector(socket, address, timeout, serverNameList)
                 .setVerifyHostname(mVerifyHostname);
     }
 
